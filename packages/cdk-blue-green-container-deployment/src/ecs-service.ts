@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { IConnectable, Connections, SecurityGroup, Port } from '@aws-cdk/aws-ec2';
-import { ICluster, LaunchType, DeploymentCircuitBreaker } from '@aws-cdk/aws-ecs';
+import { ICluster, LaunchType, DeploymentCircuitBreaker, CloudMapOptions } from '@aws-cdk/aws-ecs';
 import { ITargetGroup } from '@aws-cdk/aws-elasticloadbalancingv2';
 import { Effect, PolicyStatement } from '@aws-cdk/aws-iam';
 import { Function, Runtime, Code } from '@aws-cdk/aws-lambda';
@@ -24,7 +24,8 @@ export interface EcsServiceProps {
   readonly prodTargetGroup: ITargetGroup;
   readonly testTargetGroup: ITargetGroup;
   readonly taskDefinition: DummyTaskDefinition;
-
+  readonly cloudMapOptions?: CloudMapOptions;
+  
   /**
    * The period of time, in seconds, that the Amazon ECS service scheduler ignores unhealthy
    * Elastic Load Balancing target health checks after a task has first started.
@@ -142,7 +143,8 @@ export class EcsService extends Construct implements IConnectable, IEcsService, 
         SchedulingStrategy: SchedulingStrategy.REPLICA,
         HealthCheckGracePeriodSeconds: healthCheckGracePeriod.toSeconds(),
         PropagateTags: props.propagateTags,
-        DeploymentConfiguration: {
+	CloudMapOptions: props.cloudMapOptions,
+	DeploymentConfiguration: {
           maximumPercent: props.maxHealthyPercent ?? 200,
           minimumHealthyPercent: props.minHealthyPercent ?? 50,
           deploymentCircuitBreaker: props.circuitBreaker
